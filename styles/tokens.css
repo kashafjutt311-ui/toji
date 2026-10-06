@@ -1,0 +1,31 @@
+/* Design tokens — palette sampled from the footage: concrete, oak, copper signage, void.
+   Mirrored into Tailwind via @theme in app/globals.css. */
+:root {
+  --ink: #0b0b0c;
+  --concrete-900: #1a1a1a;
+  --concrete-500: #8c8a85;
+  --concrete-200: #d9d6d0;
+  --paper: #f2efe9;
+  --oak: #b98a5e;
+  --copper: #c2733a;
+  --glow: #ffb25a;
+
+  --hairline: rgba(255, 255, 255, 0.18);
+  --scrim: rgba(0, 0, 0, 0.35);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.7, 0, 0.2, 1);
+  --dur-reveal: 900ms;
+  --dur-wipe: 400ms;
+  --stagger: 80ms;
+
+  --gutter: 24px;
+  --nav-h: 72px;
+}
+
+@media (min-width: 769px) {
+  :root {
+    --gutter: 48px;
+    --nav-h: 88px;
+  }
+}

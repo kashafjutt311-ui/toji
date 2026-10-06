@@ -1,0 +1,159 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-concrete-900: var(--concrete-900);
+  --color-concrete-500: var(--concrete-500);
+  --color-concrete-200: var(--concrete-200);
+  --color-paper: var(--paper);
+  --color-oak: var(--oak);
+  --color-copper: var(--copper);
+  --color-glow: var(--glow);
+  --color-hairline: var(--hairline);
+
+  --font-display: var(--font-syne), "Arial Narrow", sans-serif;
+  --font-serif: var(--font-instrument), Georgia, serif;
+  --font-sans: var(--font-inter-tight), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  --ease-out: var(--ease-out);
+  --ease-in-out: var(--ease-in-out);
+
+  --spacing-gutter: var(--gutter);
+  --spacing-nav: var(--nav-h);
+}
+
+/* ---------- base ---------- */
+html {
+  background: var(--ink);
+  color: var(--paper);
+  overscroll-behavior: none;
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  font-family: var(--font-sans);
+  overflow-x: clip;
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+::selection {
+  background: var(--copper);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--copper);
+  outline-offset: 3px;
+}
+
+/* Lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+/* ---------- type primitives ---------- */
+@utility display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.04em;
+  line-height: 0.86;
+}
+@utility serif-italic {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+@utility mono-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  @media (min-width: 769px) {
+    font-size: 12px;
+  }
+}
+@utility hairline {
+  background: var(--hairline);
+}
+
+/* Line mask for reveal animations: each .line clips its .line-inner */
+.line {
+  display: block;
+  overflow: clip;
+  padding-bottom: 0.06em; /* room for descenders inside the mask */
+  margin-bottom: -0.06em;
+}
+.line-inner {
+  display: block;
+  will-change: transform;
+}
+
+/* Text on video: soft scrim for 4.5:1 regardless of frame */
+.scrim-l {
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.35) 45%, transparent 75%);
+}
+.scrim-b {
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.35) 40%, transparent 80%);
+}
+.text-shadow-soft {
+  text-shadow: 0 1px 24px rgba(0, 0, 0, 0.35);
+}
+
+@keyframes scrollhint {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+.skip-link {
+  position: fixed;
+  left: var(--gutter);
+  top: -100px;
+  z-index: 100;
+  background: var(--copper);
+  color: var(--ink);
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.skip-link:focus {
+  top: 16px;
+}
+
+.sr-only-focusable:not(:focus):not(:focus-within) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

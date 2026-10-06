@@ -1,0 +1,3 @@
+poster.jpg, poster-m.jpg: frame 0
+scrub.mp4: width=1280 crf=27 gop=10 bframes=0 (37MB)
+scrub-m.mp4: width=720 crf=28 gop=10 bframes=0 (11MB)
