@@ -2,12 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import { beatById, HERO as HERO_T, within } from "@/lib/choreography";
+import { HERO as HERO_T } from "@/lib/choreography";
 import { HERO } from "@/data/copy";
-import { useStage } from "@/lib/hooks";
+import { useScrollState } from "@/lib/hooks";
 import { Monogram } from "@/components/brand/Monogram";
-
-const range = beatById("hero").scroll;
 
 function Word({ text }: { text: string }) {
   return (
@@ -26,33 +24,30 @@ function Word({ text }: { text: string }) {
  * Scroll: wordmark scales 1→1.6 and fades while the CP monogram resolves at centre,
  * then the monogram flies into the nav slot (#nav-logo) and hands over to it.
  */
-export function HeroBeat({ entered }: { entered: boolean }) {
-  const root = useRef<HTMLElement>(null);
+export function HeroOverlay({ entered }: { entered: boolean }) {
+  const root = useRef<HTMLDivElement>(null);
   const wordmark = useRef<HTMLHeadingElement>(null);
   const mono = useRef<SVGSVGElement>(null);
   const hints = useRef<HTMLDivElement>(null);
   const tl = useRef<gsap.core.Timeline | null>(null);
 
-  // hide letters under the preloader so the intro can play them in
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.set(".hero-letter", { yPercent: 110 });
-      gsap.set(hints.current!.children, { autoAlpha: 0, y: 12 });
-    }, root);
-    return () => ctx.revert();
-  }, []);
-
-  // intro (time-based) once the curtain lifts
+  // Intro, played as the curtain starts lifting. The letters are NOT hidden beforehand:
+  // they paint normally on first render (under the preloader) so that paint is the LCP,
+  // and only drop below their masks at the instant the reveal starts — still covered, so
+  // the effect on screen is identical.
   useEffect(() => {
     if (!entered) return;
     const ctx = gsap.context(() => {
-      gsap.to(".hero-letter", {
-        yPercent: 0,
-        duration: 0.9,
-        ease: "expo.out",
-        stagger: { each: 0.035, from: "start" },
-      });
-      gsap.to(hints.current!.children, { autoAlpha: 1, y: 0, duration: 0.9, ease: "expo.out", delay: 0.6, stagger: 0.08 });
+      gsap.fromTo(
+        ".hero-letter",
+        { yPercent: 110 },
+        { yPercent: 0, duration: 0.9, ease: "expo.out", delay: 0.35, stagger: { each: 0.035, from: "start" } },
+      );
+      gsap.fromTo(
+        hints.current!.children,
+        { autoAlpha: 0, y: 12 },
+        { autoAlpha: 1, y: 0, duration: 0.9, ease: "expo.out", delay: 0.95, stagger: 0.08 },
+      );
     }, root);
     return () => ctx.revert();
   }, [entered]);
@@ -100,16 +95,17 @@ export function HeroBeat({ entered }: { entered: boolean }) {
     };
   }, []);
 
-  useStage(({ p }) => {
-    tl.current?.progress(within(p, range));
+  // the overlay is fixed; its timeline runs across the hero section's own scroll height
+  useScrollState(({ heroP }) => {
+    tl.current?.progress(heroP);
+    const el = root.current;
+    if (el) el.style.visibility = heroP >= 1 ? "hidden" : "";
   });
 
   return (
-    <section
+    <div
       ref={root}
-      id="hero"
-      aria-labelledby="hero-title"
-      className="pointer-events-none absolute inset-0 flex flex-col justify-center px-[var(--gutter)]"
+      className="pointer-events-none fixed inset-0 z-10 flex flex-col justify-center px-[var(--gutter)]"
     >
       <h1
         id="hero-title"
@@ -152,6 +148,6 @@ export function HeroBeat({ entered }: { entered: boolean }) {
           {HERO.meta[1]}
         </span>
       </div>
-    </section>
+    </div>
   );
 }

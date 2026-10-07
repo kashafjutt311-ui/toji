@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
-import { stage, type StageState } from "./scroll";
+import { scroll, type ScrollState } from "./scroll";
 
 /** matchMedia as external store; `null` on the server and during hydration. */
 export function useMediaQuery(query: string): boolean | null {
@@ -20,11 +20,11 @@ export const useReducedMotion = () => useMediaQuery("(prefers-reduced-motion: re
 export const useIsMobile = () => useMediaQuery("(max-width: 768px)");
 export const useFinePointer = () => useMediaQuery("(hover: hover) and (pointer: fine)");
 
-/** Subscribe to stage progress without re-rendering. */
-export function useStage(cb: (s: StageState) => void) {
+/** Subscribe to scroll/video progress without re-rendering. */
+export function useScrollState(cb: (s: ScrollState) => void) {
   const ref = useRef(cb);
   useEffect(() => {
     ref.current = cb;
   });
-  useEffect(() => stage.subscribe((s) => ref.current(s)), []);
+  useEffect(() => scroll.subscribe((s) => ref.current(s)), []);
 }

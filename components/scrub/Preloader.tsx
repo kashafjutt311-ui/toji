@@ -1,29 +1,35 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { Monogram } from "@/components/brand/Monogram";
 import { lockScroll } from "@/lib/scroll";
+import { useLoadProgress } from "@/lib/loading";
 
 interface Props {
-  /** 0–1, real load progress (video bytes) */
-  progress: number;
+  /** skip the byte count (reduced motion: nothing to download) */
+  instant?: boolean;
   /** video ready (canplaythrough) — fonts are awaited here */
   ready: boolean;
+  /** called as the curtain starts to lift (hero intro plays underneath it) */
+  onLift?: () => void;
   /** called once the curtain has lifted */
-  onDone: () => void;
+  onDone?: () => void;
 }
 
 /**
  * Black curtain: CP monogram stroke draws in with load progress, mono % counter, then lifts.
  * Server-rendered so it covers first paint; hidden via <noscript> when JS is off.
  */
-export function Preloader({ progress, ready, onDone }: Props) {
+export function Preloader({ instant, ready, onLift, onDone }: Props) {
+  const loaded = useLoadProgress();
+  const progress = instant ? 1 : loaded;
   const root = useRef<HTMLDivElement>(null);
   const svg = useRef<SVGSVGElement>(null);
   const counter = useRef<HTMLSpanElement>(null);
   const shown = useRef({ v: 0 });
   const done = useRef(false);
+  const [gone, setGone] = useState(false);
 
   // path has pathLength=1, so dashoffset 1 → 0 draws the whole outline
   const paint = useCallback(() => {
@@ -32,10 +38,13 @@ export function Preloader({ progress, ready, onDone }: Props) {
     svg.current?.querySelector("path")?.setAttribute("stroke-dashoffset", String(1 - v));
   }, []);
 
-  // lock scroll while the curtain is down
+  // lock scroll while the curtain is down. Next keeps "/" mounted-but-hidden while a
+  // service page is open (React Activity) and re-runs effects on Back — by then the
+  // curtain is gone, so don't lock (or reset scroll) again.
   useEffect(() => {
-    lockScroll(true);
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    if (done.current) return;
+    lockScroll(true);
     window.scrollTo(0, 0);
     return () => lockScroll(false);
   }, []);
@@ -61,16 +70,20 @@ export function Preloader({ progress, ready, onDone }: Props) {
         .timeline({
           onComplete: () => {
             lockScroll(false);
-            onDone();
+            setGone(true);
+            onDone?.();
           },
         })
         .to(shown.current, { v: 1, duration: 0.4, ease: "power2.out", onUpdate: paint })
         .to(path, { attr: { "fill-opacity": 1 }, duration: 0.5, ease: "power2.out" })
-        .to(root.current, { yPercent: -100, duration: 0.9, ease: "expo.inOut" }, "+=0.15")
-        .set(root.current, { display: "none" });
+        .call(() => onLift?.(), undefined, "+=0.15")
+        .to(root.current, { yPercent: -100, duration: 0.9, ease: "expo.inOut" }, "<");
     });
     return () => void tl?.kill();
-  }, [ready, onDone, paint]);
+  }, [ready, onLift, onDone, paint]);
+
+  // unmount once lifted (an Activity reveal on Back would otherwise reset its display)
+  if (gone) return null;
 
   return (
     <div

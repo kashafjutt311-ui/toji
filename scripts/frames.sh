@@ -34,7 +34,8 @@ STILLS=(
   "hospitality:82 hospitality-1:77 hospitality-2:80 hospitality-3:86"
   "art:93 art-1:91 art-2:96 art-3:99"
   "academy:112 academy-1:104 academy-2:108 academy-3:110"
-  "house:116 contact:144"
+  # reduced-motion section stills (STILLS in lib/choreography.ts)
+  "about:16 process:130 contact:144"
 )
 
 stills() {

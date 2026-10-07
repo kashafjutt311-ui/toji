@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { beatAt, timeAt } from "@/lib/choreography";
-import { stage } from "@/lib/scroll";
+import { sectionAt, serviceAt, timeAt } from "@/lib/choreography";
+import { scroll } from "@/lib/scroll";
 import { telemetry } from "@/lib/telemetry";
 
 const fmt = (t: number) => {
@@ -33,12 +33,13 @@ export function DebugOverlay() {
     const loop = (now: number) => {
       fps = fps * 0.9 + (1000 / Math.max(1, now - last)) * 0.1;
       last = now;
-      const s = stage.get();
-      const b = beatAt(s.p);
+      const s = scroll.get();
+      const t = timeAt(s.p);
       if (pre.current)
         pre.current.textContent = [
-          `p        ${s.p.toFixed(4)}`,
-          `beat     ${b.id}${b.label ? `  (${b.label})` : ""}`,
+          `y        ${Math.round(s.y)} / ${Math.round(s.videoSpan)}px`,
+          `p        ${s.p.toFixed(4)}   hero ${s.heroP.toFixed(2)}`,
+          `section  ${s.y >= s.videoSpan - 4 ? "contact" : sectionAt(t)}${serviceAt(t) ? ` · ${serviceAt(t)}` : ""}`,
           `target   ${fmt(timeAt(s.p))}`,
           `video    ${fmt(telemetry.time)}`,
           `lag      ${(timeAt(s.p) - telemetry.time).toFixed(3)}s`,

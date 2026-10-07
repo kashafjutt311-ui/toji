@@ -31,9 +31,9 @@ page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
 
 const tag = mobile ? "m" : "d";
 const t0 = Date.now();
-await page.goto(url + (canvas ? "?canvas=1" : ""), { waitUntil: "domcontentloaded" });
+await page.goto(url + "/?cp-test" + (canvas ? "&canvas=1" : ""), { waitUntil: "domcontentloaded" });
 await page.screenshot({ path: `${out}/${tag}-00-preloader.png` });
-await page.waitForFunction(() => getComputedStyle(document.getElementById("preloader")).display === "none", null, { timeout: 120_000 });
+await page.waitForFunction(() => { const el = document.getElementById("preloader"); return !el || getComputedStyle(el).display === "none"; }, null, { timeout: 120_000 });
 const loadMs = Date.now() - t0;
 await page.waitForTimeout(1600); // intro letters
 await page.screenshot({ path: `${out}/${tag}-01-hero.png` });
@@ -59,7 +59,7 @@ for (let i = 0; i < 2000; i++) {
   if (mobile) await page.evaluate(() => window.scrollBy(0, 40));
   else await page.mouse.wheel(0, 60);
   await page.waitForTimeout(16);
-  const p = await page.evaluate(() => window.__cp.stage.get().p);
+  const p = await page.evaluate(() => window.__cp.scroll.get().p);
   if (shot < shots.length && p >= shots[shot]) {
     await page.waitForTimeout(900); // let lerp settle
     const t = await page.evaluate(() => window.__cp.telemetry.time.toFixed(1));

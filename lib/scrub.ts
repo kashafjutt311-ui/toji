@@ -21,6 +21,9 @@ export interface Renderer {
   destroy(): void;
 }
 
+/** The live engine, so a programmatic jump (Back-restore) can snap instead of lerping. */
+export const activeEngine: { current: ScrubEngine | null } = { current: null };
+
 export class ScrubEngine {
   private current = 0;
   private written = -1;
@@ -34,6 +37,7 @@ export class ScrubEngine {
   ) {}
 
   start(initial = this.target()) {
+    activeEngine.current = this;
     this.current = initial;
     this.renderer.seek(initial);
     this.written = initial;
@@ -76,6 +80,7 @@ export class ScrubEngine {
   }
 
   destroy() {
+    if (activeEngine.current === this) activeEngine.current = null;
     this.stop();
     this.renderer.destroy();
   }
@@ -97,19 +102,26 @@ export class VideoRenderer implements Renderer {
     this.seeking = false;
     if (!this.hasRVFC) this.record(performance.now() - this.seekStart);
   };
+  // NOTE: without rVFC (old Safari) every seek is recorded; jumps are rare enough there.
 
   constructor(readonly video: HTMLVideoElement) {
     video.addEventListener("seeked", this.onSeeked);
     this.hasRVFC = "requestVideoFrameCallback" in video;
   }
 
+  private lastT = 0;
+
   seek(t: number) {
     const max = (this.video.duration || 0) - 0.001;
     this.seeking = true;
     const start = (this.seekStart = performance.now());
+    // only ordinary scrub steps count toward stutter detection; a deliberate jump of
+    // many seconds (rail click, Back-restore) is legitimately slower and says nothing
+    const small = Math.abs(t - this.lastT) < 0.5;
+    this.lastT = t;
     this.video.currentTime = Math.max(0, Math.min(t, max > 0 ? max : t));
     // latency until the sought frame is actually composited — what the user perceives
-    if (this.hasRVFC) this.video.requestVideoFrameCallback((now) => this.record(now - start));
+    if (this.hasRVFC && small) this.video.requestVideoFrameCallback((now) => this.record(now - start));
   }
 
   busy() {

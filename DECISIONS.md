@@ -62,3 +62,78 @@ All ranges live in `lib/choreography.ts`.
   then attached to `<video>`. Gate = blob complete + `loadedmetadata` + `canplaythrough` + `document.fonts.ready`.
 - Service stills are extracted at the native **1280 w**, not 1920 w: the master is 720p, so upscaling
   would add bytes, not detail.
+
+## Change request — forward-moving background with glass frames
+
+Replaces the pinned stage / per-beat overlays. Removed: `components/beats/*`, the pinned
+stage, per-beat text timelines, the vignette "gate" and velocity letter-stretch (they belonged
+to the pinned design).
+
+### Scroll → film
+- Real document scroll. `progress = scrollY / (top of #contact)`; the film plays across
+  everything above Contact, which holds on the last frame. This is the brief's
+  `scrollY / (docHeight − vh)` with the footer excluded, so the footer never scrubs the film.
+- **Constant walking speed:** every section is `footage seconds × VH_PER_SECOND` tall
+  (8.4 svh/s, `lib/layout.ts`), so page-height-per-second is identical everywhere. No
+  section boundary can make the film speed up or stall; sections with less content than
+  footage simply have more transparent space. Frames are positioned *inside* their section
+  at the moment they should be centred (`FRAME_AT`).
+- End ease: last 3% of progress uses `f(u) = u + u² − u³` (matches slope at the join, zero
+  slope at the end), so the film decelerates into the final frame.
+- Mobile uses the same svh-per-second, so total scroll length is comparable to desktop.
+
+### Sections vs footage (verified on the contact sheets)
+| Section | Footage | Frames centred at |
+|---|---|---|
+| Hero | 0:00–0:12 | — |
+| About | 0:12–0:47 | 0:24 (top edge arrives with the lobby, ~0:12) |
+| Services | 0:47–1:54 | Development 0:52 · Sales & Marketing 1:01 · Real Estate 1:10 · Hospitality 1:22 · Art 1:34 · Academy 1:47 |
+| How we work | 1:54–2:25 | heading 1:59 (House of CP) · four steps 2:11 (woman walks to the door) |
+| Contact | holds on 2:25 | — |
+How We Work runs to the end of the film (through the doorway into the courtyard) so the
+last stretch of footage still has page height under it; Contact then holds the final frame.
+
+### Services
+Still **six, named from the signage**: Development, Sales & Marketing, Real Estate,
+Hospitality, Art, Academy. The change request lists "Media" and "Gallery"; neither is a
+service sign in the film (see Phase 1 §Services).
+
+### Glass
+- As specified: `rgba(14,14,14,.38)`, `blur(18px) saturate(120%)`, 1px `rgba(255,255,255,.18)`,
+  square corners, no shadow; mobile 10px blur / .5 tint; `.72` solid fallback without
+  `backdrop-filter`; text frames ≤ 520px and ≤ 45vw; no nested blur.
+- **Tint for pale footage is .58, not .5, and every frame uses it.** Measured with
+  `verify-glass.mjs` (95th-percentile background luminance behind each frame, paper text):
+  at .5, 4 desktop frames (Sales & Marketing 4.11, steps 3–4 4.36/4.29, Contact 4.15) and
+  5 mobile frames (About 4.10, Development 4.33, Academy 4.25, step 2 3.68, Contact 4.37)
+  fall below 4.5:1. Even Hospitality, a dark corridor, fails at .38 because of the
+  chandeliers (3.6:1). At .58 the minimum is 5.23:1 desktop and 4.73:1 mobile.
+  Re-test any retimed frame with `node scripts/verify-glass.mjs --tint=0.5`.
+- Entrance: IntersectionObserver flips `data-state`; CSS does the 800ms 48px rise and the
+  70ms child stagger. `will-change` is set only during the transition. No blur-in.
+- Counter-parallax 0.96× is applied to frame *content* only; the glass stays at 1×.
+
+### Video sources
+- Added **`scrub-m.webm`** (VP9, 720w, 11 MB). Both desktop and mobile now pick the first
+  source `canPlayType()` accepts, using codec strings (`avc1.64001F` / `avc1.64001E` /
+  `vp9`). Before, mobile always took the mp4 and a browser without H.264 got no video.
+
+### Performance work
+- Mobile home Lighthouse was 59 (TBT 1,160 ms). Two fixes:
+  1. `Experience` holds `ready`/`entered` state, and every section was re-rendered twice
+     while the curtain lifted. Static sections are now hoisted elements (stable identity),
+     so React skips them.
+  2. The video download kept ~180 chunk buffers in an array until the end, then copied them
+     into a Blob, which triggered a ~200 ms major GC. It now counts bytes in a
+     `TransformStream` and lets `Response.blob()` assemble the file.
+  Result: Edge at 4× CPU, TBT ≈ 287 → 136 ms; curtain lifts 6.1 → 4.5 s; Lighthouse mobile
+  home 59 → 71.
+- `backdrop-filter` measured in Google Chrome (GPU, headed): desktop avg 54.9 fps with glass
+  vs 56.8 without; mobile 58.0 vs 56.7. Median frame 16.7 ms either way; the occasional
+  slow frame happens with blur off too. Blur is not the bottleneck.
+
+### Measurement notes
+- Test machine: 2-core i5-5200U with the owner's Chrome and Edge open (~80% CPU). Lighthouse
+  runs vary by up to ±10 points; `scripts/lighthouse.sh` keeps the median of 3.
+- Lighthouse cannot attach to Edge here, so it runs in installed Google Chrome.
+- The verify scripts need `window.__cp`; in production it exists only with `?cp-test`.

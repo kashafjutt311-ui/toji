@@ -2,7 +2,7 @@
 # Re-encodes the source walkthrough for scroll-scrubbing.
 #
 #   bash scripts/encode.sh            # all outputs
-#   bash scripts/encode.sh mp4        # just one: mp4 | webm | mobile | poster
+#   bash scripts/encode.sh mp4        # just one: mp4 | webm | mobile | mobile-webm | poster
 #   INTRA=1 bash scripts/encode.sh    # every frame a keyframe (the brief's original spec)
 #
 # Why GOP 10 and not all-intra (see DECISIONS.md §Encoding): this footage is grainy CG, so
@@ -57,16 +57,18 @@ encode_mobile() { ladder "$OUT/scrub-m.mp4" 15 "720 28" "720 30" "640 30" "640 3
 
 encode_webm() {
   # VP9, constant quality. Secondary source for browsers without H.264.
-  local w=${1:-1280}
-  echo ">> scrub.webm  width=$w gop=$GOP"
+  # $1=width $2=crf $3=output name
+  local w=${1:-1280} crf=${2:-42} name=${3:-scrub.webm}
+  echo ">> $name  width=$w crf=$crf gop=$GOP"
   ffmpeg -v error -stats -y -i "$SRC" \
     -vf "scale=$w:-2:flags=lanczos" \
-    -c:v libvpx-vp9 -b:v 0 -crf 42 -g "$GOP" -keyint_min "$GOP" -auto-alt-ref 0 -lag-in-frames 0 \
+    -c:v libvpx-vp9 -b:v 0 -crf "$crf" -g "$GOP" -keyint_min "$GOP" -auto-alt-ref 0 -lag-in-frames 0 \
     -deadline good -cpu-used 4 -row-mt 1 -tile-columns 2 \
     -pix_fmt yuv420p -an \
-    "$OUT/scrub.webm"
-  echo "scrub.webm: width=$w crf=42 gop=$GOP ($(mb "$OUT/scrub.webm")MB)" >> "$OUT/ENCODE_LOG.txt"
+    "$OUT/$name"
+  echo "$name: width=$w crf=$crf gop=$GOP ($(mb "$OUT/$name")MB)" >> "$OUT/ENCODE_LOG.txt"
 }
+encode_mobile_webm() { encode_webm 720 44 scrub-m.webm; }
 
 encode_poster() {
   ffmpeg -v error -y -ss 0 -i "$SRC" -frames:v 1 -q:v 3 "$OUT/poster.jpg"
@@ -80,11 +82,13 @@ case "$what" in
   mp4) encode_mp4 ;;
   webm) encode_webm ;;
   mobile) encode_mobile ;;
+  mobile-webm) encode_mobile_webm ;;
   poster) encode_poster ;;
   all)
     encode_poster
     encode_mp4
     encode_mobile
+    encode_mobile_webm
     encode_webm "$(ffprobe -v error -select_streams v -show_entries stream=width -of csv=p=0 "$OUT/scrub.mp4")"
     ;;
 esac

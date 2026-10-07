@@ -112,6 +112,176 @@ html.lenis body {
   text-shadow: 0 1px 24px rgba(0, 0, 0, 0.35);
 }
 
+/* ---------- glass frame ---------- */
+.gf {
+  --tint: 0.38;
+  --blur: 18px;
+  background: rgba(14, 14, 14, var(--tint));
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(120%);
+  backdrop-filter: blur(var(--blur)) saturate(120%);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  color: var(--paper);
+  padding: 28px;
+  isolation: isolate;
+}
+/* 0.58, not the brief's 0.5: measured worst-case (p95) paper-on-glass contrast over the
+   white gallery walls was 4.1:1 at 0.5 and ≥ 4.8:1 at 0.58 (scripts/verify-glass.mjs) */
+.gf[data-tone="bright"] {
+  --tint: 0.58;
+}
+.gf[data-size="text"] {
+  width: min(520px, 42vw);
+}
+.gf[data-size="step"] {
+  width: 100%;
+}
+.gf[data-size="wide"] {
+  width: min(760px, 45vw);
+}
+@media (min-width: 769px) {
+  .gf {
+    padding: 36px 40px;
+  }
+}
+.gf[data-size="step"] {
+  padding: 26px 24px;
+}
+@media (max-width: 768px) {
+  .gf {
+    --tint: 0.5;
+    --blur: 10px;
+    padding: 24px 20px;
+  }
+  .gf[data-tone="bright"] {
+    --tint: 0.58;
+  }
+  .gf[data-size] {
+    width: auto;
+  }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .gf,
+  .gf[data-tone="bright"] {
+    --tint: 0.72;
+  }
+}
+
+/* entrance: rise 48px + fade, 800ms ease-out; children stagger 70ms */
+.gf,
+.gf .gf-item {
+  transition:
+    opacity 800ms var(--ease-out),
+    translate 800ms var(--ease-out);
+  transition-delay: var(--d, 0ms);
+}
+.gf .gf-item {
+  transition-delay: calc(var(--d, 0ms) + var(--i, 0) * 70ms + 120ms);
+}
+.gf[data-state="pending"] {
+  opacity: 0;
+  translate: 0 48px;
+}
+.gf[data-state="pending"] .gf-item {
+  opacity: 0;
+  translate: 0 16px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gf[data-state="pending"],
+  .gf[data-state="pending"] .gf-item {
+    opacity: 1;
+    translate: none;
+  }
+}
+
+/* process row hairline: draws as the steps arrive */
+.process-line {
+  left: 0;
+  top: -14px;
+  height: 1px;
+  width: 100%;
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 1400ms var(--ease-out) 150ms;
+}
+.process-row[data-drawn="true"] .process-line {
+  transform: scaleX(1);
+}
+@media (max-width: 767px) {
+  .process-line {
+    left: -8px;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    transform-origin: center top;
+    transform: scaleY(0);
+  }
+  .process-row[data-drawn="true"] .process-line {
+    transform: scaleY(1);
+  }
+}
+
+/* cursor */
+.cursor {
+  transition: opacity 200ms;
+}
+.cursor-dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  border-radius: 50%;
+  background: var(--paper);
+  scale: 0.125;
+  transition: scale 400ms var(--ease-out);
+}
+.cursor-label {
+  color: var(--ink);
+  font-size: 10px;
+  opacity: 0;
+  transition: opacity 200ms;
+}
+.cursor[data-view="true"] .cursor-dot {
+  scale: 1;
+}
+.cursor[data-view="true"] .cursor-label {
+  opacity: 1;
+  transition-delay: 120ms;
+}
+
+/* service-page entrance (after the route wipe) */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    translate: 0 24px;
+  }
+}
+@keyframes rise-line {
+  from {
+    translate: 0 105%;
+  }
+}
+.rise {
+  animation: rise-in 900ms var(--ease-out) both;
+}
+.rise-line {
+  animation: rise-line 900ms var(--ease-out) both;
+}
+
+/* route transition: copper wipe */
+.route-wipe {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  background: var(--copper);
+  clip-path: inset(100% 0 0 0);
+  pointer-events: none;
+}
+
 @keyframes scrollhint {
   0% {
     transform: translateX(-100%);

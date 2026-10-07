@@ -47,7 +47,7 @@ export const SERVICES_INTRO = {
 } as const;
 
 export const PROCESS = {
-  title: "One house, many possibilities.", // source: video @1:55
+  title: "Four moves, one owner — from the first conversation to long after opening.", // TODO(copy)
   steps: [
     { title: "Discover", body: "We read the site, the market and the ambition before anything is drawn." }, // TODO(copy)
     { title: "Design", body: "Every discipline sits at one table, so the concept is commercial from the first line." }, // TODO(copy)

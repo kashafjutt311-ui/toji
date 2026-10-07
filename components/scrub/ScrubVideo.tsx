@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { timeAt, VIDEO } from "@/lib/choreography";
-import { stage } from "@/lib/scroll";
+import { SEQUENCE, timeAt, VIDEO } from "@/lib/choreography";
+import { scroll } from "@/lib/scroll";
 import { isMobileViewport, loadVideoBlob, once, pickSource } from "@/lib/media";
 import { useIsMobile } from "@/lib/hooks";
 import {
@@ -47,9 +47,8 @@ export function ScrubVideo({ onProgress, onReady }: Props) {
     const canvas = canvasRef.current!;
     const ac = new AbortController();
     let engine: ScrubEngine | null = null;
-    let blobUrl: string | null = null;
     let stutterTimer = 0;
-    const target = () => timeAt(stage.get().p);
+    const target = () => timeAt(scroll.get().p);
     const onFrame = (t: number) => {
       telemetry.time = t;
       telemetry.target = target();
@@ -82,7 +81,7 @@ export function ScrubVideo({ onProgress, onReady }: Props) {
 
       const src = pickSource(mobile);
       telemetry.source = src;
-      blobUrl = await loadVideoBlob(src, (f) => cb.current.onProgress(f * 0.95), ac.signal);
+      const blobUrl = await loadVideoBlob(src, (f) => cb.current.onProgress(f * 0.95), ac.signal);
       if (ac.signal.aborted) return;
       video.src = blobUrl;
       video.load();
@@ -102,7 +101,7 @@ export function ScrubVideo({ onProgress, onReady }: Props) {
           const med = renderer.medianLatency();
           telemetry.latency = med;
           if (med === null) return;
-          if (med > STUTTER_MS || (isIOS() && med > STUTTER_MS * 0.6)) {
+          if (SEQUENCE.deployed && (med > STUTTER_MS || (isIOS() && med > STUTTER_MS * 0.6))) {
             window.clearInterval(stutterTimer);
             const r = await startCanvas();
             if (r && engine) {
@@ -120,7 +119,7 @@ export function ScrubVideo({ onProgress, onReady }: Props) {
       ac.abort();
       window.clearInterval(stutterTimer);
       engine?.destroy();
-      if (blobUrl?.startsWith("blob:")) URL.revokeObjectURL(blobUrl);
+      // the blob URL is kept for the session (lib/media.ts) so Back from a service page is instant
     };
   }, [known]);
 

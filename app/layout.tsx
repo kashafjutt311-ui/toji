@@ -3,18 +3,22 @@ import { Syne, Instrument_Serif, Inter_Tight, JetBrains_Mono } from "next/font/g
 import { SITE } from "@/data/copy";
 import { SmoothScroll } from "@/components/SmoothScroll";
 import { Nav } from "@/components/nav/Nav";
+import { ClientExtras } from "@/components/ClientExtras";
 import "./globals.css";
 
-const syne = Syne({ variable: "--font-syne", subsets: ["latin"], weight: ["700", "800"], display: "swap" });
+// Only Syne (hero / titles — the LCP text) and Inter Tight (body) are preloaded; the serif
+// and mono faces swap in without competing with the LCP for bandwidth.
+const syne = Syne({ variable: "--font-syne", subsets: ["latin"], weight: ["800"], display: "swap" });
 const instrument = Instrument_Serif({
   variable: "--font-instrument",
   subsets: ["latin"],
   weight: "400",
   style: ["italic"],
   display: "swap",
+  preload: false,
 });
 const interTight = Inter_Tight({ variable: "--font-inter-tight", subsets: ["latin"], weight: ["400", "500"], display: "swap" });
-const jetbrains = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin"], weight: ["400"], display: "swap" });
+const jetbrains = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin"], weight: ["400"], display: "swap", preload: false });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
@@ -42,6 +46,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <SmoothScroll />
         <Nav />
         {children}
+        <ClientExtras />
       </body>
     </html>
   );
