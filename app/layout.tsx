@@ -17,7 +17,7 @@ const instrument = Instrument_Serif({
   display: "swap",
   preload: false,
 });
-const interTight = Inter_Tight({ variable: "--font-inter-tight", subsets: ["latin"], weight: ["400", "500"], display: "swap" });
+const interTight = Inter_Tight({ variable: "--font-inter-tight", subsets: ["latin"], weight: ["300", "400", "500", "600"], display: "swap" });
 const jetbrains = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin"], weight: ["400"], display: "swap", preload: false });
 
 export const metadata: Metadata = {

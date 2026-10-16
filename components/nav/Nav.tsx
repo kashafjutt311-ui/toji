@@ -7,8 +7,11 @@ import { Monogram } from "@/components/brand/Monogram";
 import { SERVICES } from "@/data/services";
 import { SITE } from "@/data/copy";
 import { getLenis, lockScroll, scroll } from "@/lib/scroll";
+import { sectionAt, timeAt, type SectionId } from "@/lib/choreography";
+import { useScrollState } from "@/lib/hooks";
 
 const LINKS = [
+  { label: "Home", id: "hero" },
   { label: "About", id: "about" },
   { label: "Services", id: "services" },
   { label: "How we work", id: "process" },
@@ -26,6 +29,14 @@ export function Nav() {
   const [hidden, setHidden] = useState(false);
   const menu = useRef<HTMLDivElement>(null);
   const toggle = useRef<HTMLButtonElement>(null);
+  const [active, setActive] = useState<SectionId>("hero");
+
+  // header links highlight the section on screen (home page only)
+  useScrollState(({ y, p, videoSpan }) => {
+    if (pathname !== "/") return;
+    const id = y >= videoSpan - 4 ? "contact" : sectionAt(timeAt(p));
+    setActive((prev) => (prev === id ? prev : id));
+  });
 
   // hide on scroll down / show on scroll up
   useEffect(() => {
@@ -111,6 +122,27 @@ export function Nav() {
           <Link href="/" aria-label="Concept Plus — home" className="block" onClick={() => setOpen(false)}>
             <Monogram id="nav-logo" className="h-9 w-auto text-paper md:h-10" aria-hidden="true" />
           </Link>
+          <nav aria-label="Primary" className="hidden lg:block">
+            <ul className="flex items-center gap-8">
+              {LINKS.map((l) => {
+                const on = pathname === "/" && active === l.id;
+                return (
+                  <li key={l.id}>
+                    <Link
+                      href={`/#${l.id}`}
+                      onClick={go(l.id)}
+                      aria-current={on ? "location" : undefined}
+                      className={`mono-label relative py-2 transition-colors after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-left after:bg-copper after:transition-transform after:duration-500 ${
+                        on ? "text-paper after:scale-x-100" : "text-paper/70 after:scale-x-0 hover:text-paper hover:after:scale-x-100"
+                      }`}
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
           <button
             ref={toggle}
             type="button"
@@ -132,6 +164,22 @@ export function Nav() {
         aria-label="Menu"
         className="fixed inset-0 z-[45] hidden flex-col justify-between bg-ink px-[var(--gutter)] pb-[var(--gutter)] pt-[calc(var(--nav-h)+4vh)] text-paper"
       >
+        {/* the header's toggle sits under this overlay, so the menu carries its own close */}
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          aria-label="Close menu"
+          className="group absolute right-[var(--gutter)] top-0 flex h-[var(--nav-h)] items-center gap-3 text-paper"
+        >
+          <span className="mono-label transition-colors group-hover:text-copper">Close</span>
+          <span
+            aria-hidden="true"
+            className="relative grid size-11 place-items-center border border-hairline transition-[border-color,rotate] duration-500 ease-[var(--ease-out)] group-hover:rotate-90 group-hover:border-copper"
+          >
+            <span className="absolute h-px w-5 rotate-45 bg-current transition-colors group-hover:bg-copper" />
+            <span className="absolute h-px w-5 -rotate-45 bg-current transition-colors group-hover:bg-copper" />
+          </span>
+        </button>
         <nav aria-label="Main">
           <ul>
             {LINKS.map((l, i) => (
@@ -139,7 +187,7 @@ export function Nav() {
                 <Link
                   href={`/#${l.id}`}
                   onClick={go(l.id)}
-                  className="menu-link display group flex items-baseline gap-4 py-2 text-[clamp(2.75rem,8vw,7.5rem)] hover:text-copper"
+                  className="menu-link display group flex items-baseline gap-4 py-2 text-[clamp(2.5rem,min(6.5vw,11vh),6.5rem)] hover:text-copper md:whitespace-nowrap"
                 >
                   <span className="mono-label translate-y-[-0.6em] text-paper/60 group-hover:text-copper">0{i + 1}</span>
                   {l.label}

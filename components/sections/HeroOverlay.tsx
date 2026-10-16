@@ -29,6 +29,7 @@ export function HeroOverlay({ entered }: { entered: boolean }) {
   const wordmark = useRef<HTMLHeadingElement>(null);
   const mono = useRef<SVGSVGElement>(null);
   const hints = useRef<HTMLDivElement>(null);
+  const copy = useRef<HTMLDivElement>(null);
   const tl = useRef<gsap.core.Timeline | null>(null);
 
   // Intro, played as the curtain starts lifting. The letters are NOT hidden beforehand:
@@ -42,6 +43,11 @@ export function HeroOverlay({ entered }: { entered: boolean }) {
         ".hero-letter",
         { yPercent: 110 },
         { yPercent: 0, duration: 0.9, ease: "expo.out", delay: 0.35, stagger: { each: 0.035, from: "start" } },
+      );
+      gsap.fromTo(
+        ".hero-copy",
+        { autoAlpha: 0, y: 24 },
+        { autoAlpha: 1, y: 0, duration: 0.9, ease: "expo.out", delay: 0.75, stagger: 0.12 },
       );
       gsap.fromTo(
         hints.current!.children,
@@ -72,6 +78,8 @@ export function HeroOverlay({ entered }: { entered: boolean }) {
       t.fromTo(wordmark.current, { scale: 1 }, { scale: HERO_T.wordmarkScale, duration: w1 - w0 }, w0)
         .fromTo(wordmark.current, { autoAlpha: 1 }, { autoAlpha: 0, duration: (w1 - w0) * 0.7 }, w0 + (w1 - w0) * 0.3)
         .fromTo(hints.current, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.15 }, 0)
+        // heading + description leave first, rising slightly, before the wordmark grows
+        .fromTo(copy.current, { autoAlpha: 1, y: 0 }, { autoAlpha: 0, y: -40, duration: 0.25 }, 0)
         .fromTo(m, { autoAlpha: 0, filter: "blur(18px)", scale: 0.92 }, { autoAlpha: 1, filter: "blur(0px)", scale: 1, duration: m1 - m0, ease: "power1.out" }, m0)
         .to(m, { x: dx, y: dy, scale: s, duration: n1 - n0, ease: "power2.inOut" }, n0)
         // hand over to the real nav logo at the very end
@@ -113,18 +121,28 @@ export function HeroOverlay({ entered }: { entered: boolean }) {
         aria-label="Concept Plus"
         className="display text-shadow-soft origin-center text-paper will-change-transform"
       >
-        {/* Syne ExtraBold runs ~1.2em per capital, so "CONCEPT" fits the measure at 10.8vw, not 14vw */}
-        <span className="hidden whitespace-nowrap text-[clamp(4rem,10.8vw,16rem)] md:block">
+        {/* "CONCEPT" in Syne ExtraBold is ~8.7em wide, so size from the space between the
+            gutters, less the section rail (a flat vw clipped the T at ~1000px wide) */}
+        <span className="hidden whitespace-nowrap text-[min(15rem,calc((100vw-2*var(--gutter)-56px)/8.9))] md:block">
           {HERO.wordmark.map((w) => (
             <Word key={w} text={w} />
           ))}
         </span>
-        <span className="block whitespace-nowrap text-[clamp(3.5rem,19vw,9rem)] md:hidden">
+        <span className="block whitespace-nowrap text-[min(9rem,calc((100vw-2*var(--gutter))/5.3))] md:hidden">
           {HERO.wordmarkMobile.map((w) => (
             <Word key={w} text={w} />
           ))}
         </span>
       </h1>
+
+      <div ref={copy} className="mt-[clamp(1.5rem,4vh,3rem)] max-w-[52rem]">
+        <p className="hero-copy font-sans text-[clamp(1.6rem,3.6vw,3.4rem)] font-light uppercase leading-[1.05] tracking-[0.01em] text-copper">
+          {HERO.heading}
+        </p>
+        <p className="hero-copy mt-4 max-w-[46ch] font-sans text-[clamp(0.95rem,1.35vw,1.3rem)] font-medium uppercase leading-snug tracking-[0.02em] text-paper">
+          {HERO.description}
+        </p>
+      </div>
 
       <Monogram
         ref={mono}
@@ -142,11 +160,7 @@ export function HeroOverlay({ entered }: { entered: boolean }) {
           </span>
           {HERO.scrollHint}
         </span>
-        <span className="text-right leading-relaxed">
-          {HERO.meta[0]}
-          <br />
-          {HERO.meta[1]}
-        </span>
+        {/* bottom-right belongs to the floor plan */}
       </div>
     </div>
   );

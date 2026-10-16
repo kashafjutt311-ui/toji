@@ -29,6 +29,7 @@ export type Tone = "dark" | "bright";
  */
 export const FRAMES = {
   about: { side: "left" as Side, tone: "bright" as Tone },
+  servicesHeading: { side: "left" as Side },
   services: {
     development: { side: "right" as Side, tone: "bright" as Tone },
     "sales-marketing": { side: "left" as Side, tone: "bright" as Tone },
@@ -63,6 +64,7 @@ export function frameTop(section: SectionId, t: number): string {
 
 export const anchorTop = {
   about: () => frameTop("about", FRAME_AT.about),
+  servicesHeading: () => frameTop("services", FRAME_AT.servicesHeading),
   service: (slug: ServiceSlug) => frameTop("services", FRAME_AT.services[slug]),
   processIntro: () => frameTop("process", FRAME_AT.processIntro),
   processSteps: () => frameTop("process", FRAME_AT.processSteps),

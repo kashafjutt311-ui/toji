@@ -122,10 +122,19 @@ export const scroll = {
  * and an early scrollTo gets clamped — so retry for up to ~1s until it sticks.
  */
 export function restoreToTime(t: number, onLanded?: () => void) {
+  restoreToY(() => scroll.yForTime(t), onLanded);
+}
+
+/** Same, for a section id (links like "/#process" arriving from another page). */
+export function restoreToSection(id: string, onLanded?: () => void) {
+  restoreToY(() => document.getElementById(id)?.offsetTop ?? 0, onLanded);
+}
+
+function restoreToY(target: () => number, onLanded?: () => void) {
   let tries = 0;
   const attempt = () => {
     scroll.measure();
-    const y = scroll.yForTime(t);
+    const y = target();
     const fits = document.documentElement.scrollHeight - innerHeight >= y - 1;
     if (fits) scrollToY(y, { immediate: true });
     if (fits && Math.abs(window.scrollY - y) < 2) {

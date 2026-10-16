@@ -4,6 +4,7 @@ import { FOOTER, SITE } from "@/data/copy";
 import { SERVICES } from "@/data/services";
 
 const SITEMAP = [
+  { label: "Home", href: "/#hero" },
   { label: "About", href: "/#about" },
   { label: "Services", href: "/#services" },
   { label: "How we work", href: "/#process" },

@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { bindScrollStore, restoreToTime, scroll } from "@/lib/scroll";
+import { bindScrollStore, restoreToSection, restoreToTime, scroll } from "@/lib/scroll";
+import { timeAt } from "@/lib/choreography";
 import { activeEngine } from "@/lib/scrub";
 import { loading } from "@/lib/loading";
 import { telemetry } from "@/lib/telemetry";
@@ -18,6 +19,7 @@ import { ProcessSection } from "@/components/sections/ProcessSection";
 import { ContactSection } from "@/components/sections/ContactSection";
 import { Footer } from "@/components/Footer";
 import { ProgressRail } from "@/components/ProgressRail";
+import { FloorPlan } from "@/components/FloorPlan";
 import { DebugOverlay } from "@/components/DebugOverlay";
 
 /**
@@ -43,7 +45,9 @@ export function Experience() {
     const t = takeReturnTime();
     const hash = window.location.hash.slice(1);
     if (t !== null) restoreToTime(t, () => activeEngine.current?.snap(t));
-    else if (hash && document.getElementById(hash)) scroll.scrollToSection(hash, { immediate: true });
+    // "/#process" from another page: same retry, then show that moment without fast-forwarding
+    else if (hash && document.getElementById(hash))
+      restoreToSection(hash, () => activeEngine.current?.snap(timeAt(scroll.get().p)));
     // test hook for scripts/verify-*.mjs: always in dev, opt-in with ?cp-test in production
     if (process.env.NODE_ENV !== "production" || window.location.search.includes("cp-test"))
       Object.assign(window, { __cp: { scroll, telemetry } });
@@ -66,6 +70,7 @@ export function Experience() {
         </section>
         {STATIC_SECTIONS}
       </main>
+      <FloorPlan visible={entered} />
       {STATIC_CHROME}
     </>
   );

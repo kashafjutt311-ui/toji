@@ -83,7 +83,7 @@ const ANCHORS = await page.evaluate(() => {
 void ANCHORS;
 const FRAME_AT = {
   about: 24,
-  development: 52,
+  development: 54,
   "sales-marketing": 61,
   "real-estate": 70,
   hospitality: 82,
@@ -102,6 +102,7 @@ await page.screenshot({ path: `screenshots/glass-${tag}-00-hero.png` });
 
 const targets = [
   ["01-about", FRAME_AT.about, "#about .gf"],
+  ["02-0-heading", 46, '#services .gf[data-variant="bare"]'],
   ...Object.entries(FRAME_AT)
     .filter(([k]) => !["about", "processIntro", "processSteps"].includes(k))
     .map(([slug, t], i) => [`02-${i + 1}-${slug}`, t, `#service-${slug}`]),

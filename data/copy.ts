@@ -21,8 +21,10 @@ export const SITE = {
 export const HERO = {
   wordmark: ["Concept", "Plus"],
   wordmarkMobile: ["Con", "cept", "Plus"],
+  // echoes the 0:22 wall: "A unified ecosystem designed to transform vision into legacy"
+  heading: "From vision to legacy",
+  description: "Transforming vision into places, narratives and experiences designed to last.",
   scrollHint: "Scroll to enter",
-  meta: ["EST. —", "A house of disciplines"], // TODO(copy): founding year
 } as const;
 
 export const ABOUT = {

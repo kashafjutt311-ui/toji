@@ -13,8 +13,14 @@ interface Props {
   side?: Side;
   /** CSS `top` inside the parent section; frame is centred on it (lib/layout.ts anchorTop) */
   top?: string;
-  /** "text" = max ~520px; "step" = narrow column for the process row; "wide" = contact */
-  size?: "text" | "step" | "wide";
+  /** "text" = max ~520px; "step" = narrow column for the process row; "wide" = contact; "feature" = About */
+  size?: "text" | "step" | "wide" | "feature";
+  /**
+   * Surface style. "glass" = the plain sheet; "premium" = deeper glass with a lit edge and
+   * sheen (About); "plaque" = darker, chamfered corner, copper edge (service cards);
+   * "bare" = no surface, type straight on the film over a soft scrim (section headings).
+   */
+  variant?: "glass" | "premium" | "plaque" | "bare";
   /** entrance animation (off for frames that live inside an already-animated group) */
   animate?: boolean;
   /** extra entrance delay in ms (staggering sibling frames) */
@@ -40,6 +46,7 @@ export function GlassFrame({
   side = "left",
   top,
   size = "text",
+  variant = "glass",
   animate = true,
   delay = 0,
   className = "",
@@ -63,6 +70,7 @@ export function GlassFrame({
       id={id}
       data-tone={tone}
       data-size={size}
+      data-variant={variant}
       className={`gf relative ${className}`}
       style={{ ...(top === undefined ? style : undefined), ...(delay ? ({ "--d": `${delay}ms` } as CSSProperties) : null) }}
       {...aria}

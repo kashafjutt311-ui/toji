@@ -77,8 +77,10 @@ export const SECTIONS: { id: SectionId; label: string | null; rail: string; vide
 export const FRAME_AT = {
   /** arrives (top edge enters) as the lobby appears, ~0:12 */
   about: 24,
+  /** big "Our Services" heading, as About gives way to the Development hall */
+  servicesHeading: 46,
   services: {
-    development: 52, // DEVELOPMENT wall 0:48–0:56
+    development: 54, // DEVELOPMENT wall 0:48–0:56 (after the heading has passed)
     "sales-marketing": 61, // SALES & MARKETING 0:58–1:04
     "real-estate": 70, // REAL ESTATE 1:05–1:14
     hospitality: 82, // HOSPITALITY corridor 1:16–1:27
@@ -102,6 +104,39 @@ export const SERVICE_TIMES = {
 } as const satisfies Record<keyof typeof FRAME_AT.services, { video: Range; still: number }>;
 
 export type ServiceSlug = keyof typeof SERVICE_TIMES;
+
+/**
+ * Floor plan (components/FloorPlan.tsx). `route` is drawn in the monogram's own viewBox
+ * (0 0 430 465): along the C's bottom bar, up its spine, across its top, into the P's bowl,
+ * round it, and out down the P's stem to the courtyard. The dot travels it across `walk`.
+ */
+export const FLOOR_PLAN = {
+  route: "M236 268 L48 268 L48 48 L212 48 L212 122 L372 122 L372 322 L212 322 L212 445",
+  /** seconds: dot waits at the door through the hero, reaches the courtyard as the walk ends */
+  walk: [12, 140] as Range,
+} as const;
+
+/** Where you are, by film time (first entry whose `until` is ahead of t). */
+export const PLACES: { until: number; name: string }[] = [
+  { until: 12, name: "Entrance" },
+  { until: 20, name: "Lobby" },
+  { until: 37, name: "Gallery hall" },
+  { until: 47, name: "We align" },
+  { until: 57.5, name: "Development" },
+  { until: 64.5, name: "Sales & Marketing" },
+  { until: 75.5, name: "Real Estate" },
+  { until: 89.5, name: "Hospitality" },
+  { until: 101, name: "Art" },
+  { until: 114, name: "Academy" },
+  { until: 120, name: "House of CP" },
+  { until: 127, name: "Formats" },
+  { until: 139, name: "Gallery walk" },
+  { until: Infinity, name: "Courtyard" },
+];
+
+export function placeAt(t: number): string {
+  return PLACES.find((p) => t < p.until)!.name;
+}
 
 /** Hero sub-timeline, in fractions of the hero section's own scroll height. */
 export const HERO = {
